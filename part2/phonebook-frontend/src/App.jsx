@@ -24,12 +24,28 @@ const App = () => {
       )
     : persons;
 
+  const updatePerson = (person) => {
+    if (
+      window.confirm(
+        `${newName} is already added to phonebook, replace the old number with a new one?`
+      )
+    ) {
+      personService
+        .update(person.id, { ...person, number: newNumber })
+        .then((updatedPerson) => {
+          setPersons(
+            persons.map((p) => (p.id !== person.id ? p : updatedPerson))
+          );
+        });
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const nameExists = persons.find((person) => person.name === newName);
-    if (nameExists) {
-      alert(`${newName} is already added to phonebook`);
+    const existingPerson = persons.find((person) => person.name === newName);
+    if (existingPerson) {
+      updatePerson(existingPerson);
       return;
     }
 
