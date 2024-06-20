@@ -1,6 +1,6 @@
 # Phonebook Backend
 
-This is a simple Express-based API for managing a phonebook hosted at hosted via [Render](https://fullstackopen-3wd9.onrender.com). The API allows you to view, add, and delete entries from the phonebook. Each entry includes a name and a phone number.
+This is a simple Express-based API for managing a phonebook hosted via [Render](https://fullstackopen-3wd9.onrender.com). The API allows you to view, add, and delete entries from the phonebook. Each entry includes a name and a phone number.
 
 ## Endpoints
 
