@@ -66,7 +66,6 @@ const App = () => {
     }
 
     const personObject = {
-      id: String(persons.length + 1),
       name: newName,
       number: newNumber,
     };
