@@ -1,5 +1,5 @@
 {
-  "name": "fullstackopen-part3",
+  "name": "phonebook-backend",
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
