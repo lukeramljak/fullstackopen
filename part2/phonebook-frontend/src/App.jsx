@@ -45,6 +45,13 @@ const App = () => {
           setPersons(
             persons.map((p) => (p.id !== person.id ? p : updatedPerson))
           );
+        })
+        .catch(() => {
+          showMessage({
+            content: `${person.name} has already been removed from server`,
+            type: "error",
+          });
+          setPersons(persons.filter((p) => p.id !== person.id));
         });
     }
   };
