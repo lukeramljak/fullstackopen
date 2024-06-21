@@ -1,29 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
-
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
+const Person = require("./models/person");
 
 morgan.token("body", (request) => {
   return request.method === "POST" ? JSON.stringify(request.body) : null;
@@ -39,9 +18,14 @@ const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: "unknown endpoint" });
 };
 
-app.get("/info", (request, response) => {
+app.get("/info", async (request, response) => {
+  const numberOfPersons = await Person.find({})
+    .then((result) => result.length)
+    .catch(() => 0);
   const content = `
-    <p>Phonebook has info for ${persons.length} people</p>
+    <p>Phonebook has info for ${numberOfPersons} ${
+    numberOfPersons === 1 ? "person" : "people"
+  }</p>
     <p>${new Date()}</p>
   `;
 
@@ -49,17 +33,15 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((result) => {
+    response.json(result);
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
-  if (!person) {
-    response.status(404).end();
-  } else {
-    response.json(person);
-  }
+  Person.findById(request.params.id).then((result) => {
+    response.json(result);
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
