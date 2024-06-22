@@ -19,9 +19,7 @@ app.get("/info", async (request, response) => {
     .then((result) => result.length)
     .catch(() => 0);
   const content = `
-    <p>Phonebook has info for ${numberOfPersons} ${
-    numberOfPersons === 1 ? "person" : "people"
-  }</p>
+    <p>Phonebook has info for ${numberOfPersons} ${numberOfPersons === 1 ? "person" : "people"}</p>
     <p>${new Date()}</p>
   `;
 
@@ -42,7 +40,7 @@ app.get("/api/persons/:id", (request, response) => {
 
 app.delete("/api/persons/:id", (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end();
     })
     .catch((error) => next(error));
