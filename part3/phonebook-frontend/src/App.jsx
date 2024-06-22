@@ -46,9 +46,9 @@ const App = () => {
             persons.map((p) => (p.id !== person.id ? p : updatedPerson))
           );
         })
-        .catch(() => {
+        .catch((error) => {
           showMessage({
-            content: `${person.name} has already been removed from server`,
+            content: error.response.data.error,
             type: "error",
           });
           setPersons(persons.filter((p) => p.id !== person.id));
@@ -70,10 +70,16 @@ const App = () => {
       number: newNumber,
     };
 
-    personService.create(personObject).then((res) => {
-      setPersons(persons.concat(res));
-      showMessage({ content: `Added ${res.name}`, type: "success" });
-    });
+    personService
+      .create(personObject)
+      .then((res) => {
+        setPersons(persons.concat(res));
+        showMessage({ content: `Added ${res.name}`, type: "success" });
+      })
+      .catch((error) => {
+        showMessage({ content: error.response.data.error, type: "error" });
+        console.log(error.response.data.error);
+      });
   };
 
   const onDelete = (id, name) => {
