@@ -66,6 +66,24 @@ test.only("a blog missing 'likes' will default them to 0", async () => {
   assert.strictEqual(returnedBlog.likes, 0);
 });
 
+test.only("missing title or url returns 400", async () => {
+  const withoutTitle = {
+    author: "Author",
+    url: "https://example.com",
+  };
+
+  const withoutUrl = {
+    title: "I have a title",
+    author: "Author",
+  };
+
+  await api.post("/api/blogs").send(withoutUrl).expect(400);
+  await api.post("/api/blogs").send(withoutTitle).expect(400);
+
+  const blogsAtEnd = await helper.blogsInDb();
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+});
+
 after(async () => {
   mongoose.connection.close();
 });
