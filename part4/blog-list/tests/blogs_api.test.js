@@ -84,6 +84,16 @@ test.only("missing title or url returns 400", async () => {
   assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
 });
 
+test.only("a blog can be successfully deleted", async () => {
+  const id = helper.initialBlogs[0]._id;
+
+  await api.delete(`/api/blogs/${id}`).expect(204);
+
+  const blogsAtEnd = await helper.blogsInDb();
+  assert.strict(!blogsAtEnd.includes(id));
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+});
+
 after(async () => {
   mongoose.connection.close();
 });
