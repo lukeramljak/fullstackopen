@@ -1,4 +1,4 @@
-const { test, after, beforeEach } = require("node:test");
+const { test, after, beforeEach, describe } = require("node:test");
 const assert = require("node:assert");
 const Blog = require("../models/blog");
 const mongoose = require("mongoose");
@@ -8,100 +8,131 @@ const helper = require("./test_helper");
 
 const api = supertest(app);
 
-beforeEach(async () => {
-  await Blog.deleteMany({});
+describe("when there is initially blogs saved", () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({});
+    await Blog.insertMany(helper.initialBlogs);
+  });
 
-  const blogObjects = helper.initialBlogs.map((blog) => new Blog(blog));
-  const promiseArray = blogObjects.map((blog) => blog.save());
-  await Promise.all(promiseArray);
-});
+  test("blogs are returned as json", async () => {
+    await api
+      .get("/api/blogs")
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+  });
 
-test.only("blogs are returned as json", async () => {
-  await api
-    .get("/api/blogs")
-    .expect(200)
-    .expect("Content-Type", /application\/json/);
-});
+  test("all blogs are returned", async () => {
+    const response = await api.get("/api/blogs");
+    assert.strictEqual(response.body.length, helper.initialBlogs.length);
+  });
 
-test.only("a blog's unique identifier is named 'id'", async () => {
-  const blog = await helper.blogsInDb();
-  assert(Object.keys(blog[0]).includes("id"));
-});
+  test("unique identifier is named 'id'", async () => {
+    const blogs = await helper.blogsInDb();
+    assert(Object.keys(blogs[0]).includes("id"));
+  });
 
-test.only("a new blog can be created", async () => {
-  const newBlog = {
-    title: "Temporary blog",
-    author: "Not a real author",
-    url: "https://example.com",
-    likes: 0,
-  };
+  describe("viewing a specific blog", () => {
+    test("succeeds with a valid id", async () => {
+      const blogsAtStart = await helper.blogsInDb();
+      const blogToView = blogsAtStart[0];
 
-  await api
-    .post("/api/blogs")
-    .send(newBlog)
-    .expect(201)
-    .expect("Content-Type", /application\/json/);
+      const resultBlog = await api
+        .get(`/api/blogs/${blogToView.id}`)
+        .expect(200)
+        .expect("Content-Type", /application\/json/);
 
-  const blogsAtEnd = await helper.blogsInDb();
-  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
+      assert.deepStrictEqual(resultBlog.body, blogToView);
+    });
 
-  const contents = blogsAtEnd.map((blog) => blog.title);
-  assert(contents.includes("Temporary blog"));
-});
+    test("fails with statuscode 400 if id is invalid", async () => {
+      const id = "5a3d5da59070081a82a3445";
+      await api.post(`/api/blogs/${id}`).expect(404);
+    });
+  });
 
-test.only("a blog missing 'likes' will default them to 0", async () => {
-  const blogWithoutLikes = {
-    title: "No one likes it",
-    author: "Nobody",
-    url: "https://example.com",
-  };
+  describe("creating new blogs", async () => {
+    test("a new blog can be created", async () => {
+      const newBlog = {
+        title: "Temporary blog",
+        author: "Not a real author",
+        url: "https://example.com",
+        likes: 0,
+      };
 
-  const response = await api
-    .post("/api/blogs")
-    .send(blogWithoutLikes)
-    .expect(201)
-    .expect("Content-Type", /application\/json/);
+      await api
+        .post("/api/blogs")
+        .send(newBlog)
+        .expect(201)
+        .expect("Content-Type", /application\/json/);
 
-  const returnedBlog = response.body;
-  assert.strictEqual(returnedBlog.likes, 0);
-});
+      const blogsAtEnd = await helper.blogsInDb();
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
 
-test.only("missing title or url returns 400", async () => {
-  const withoutTitle = {
-    author: "Author",
-    url: "https://example.com",
-  };
+      const contents = blogsAtEnd.map((blog) => blog.title);
+      assert(contents.includes("Temporary blog"));
+    });
 
-  const withoutUrl = {
-    title: "I have a title",
-    author: "Author",
-  };
+    test("a blog missing 'likes' will default them to 0", async () => {
+      const blogWithoutLikes = {
+        title: "No one likes it",
+        author: "Nobody",
+        url: "https://example.com",
+      };
 
-  await api.post("/api/blogs").send(withoutUrl).expect(400);
-  await api.post("/api/blogs").send(withoutTitle).expect(400);
+      const response = await api
+        .post("/api/blogs")
+        .send(blogWithoutLikes)
+        .expect(201)
+        .expect("Content-Type", /application\/json/);
 
-  const blogsAtEnd = await helper.blogsInDb();
-  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
-});
+      const returnedBlog = response.body;
+      assert.strictEqual(returnedBlog.likes, 0);
+    });
 
-test.only("a blog can be successfully deleted", async () => {
-  const id = helper.initialBlogs[0]._id;
+    test("missing title or url returns 400", async () => {
+      const withoutTitle = {
+        author: "Author",
+        url: "https://example.com",
+      };
 
-  await api.delete(`/api/blogs/${id}`).expect(204);
+      const withoutUrl = {
+        title: "I have a title",
+        author: "Author",
+      };
 
-  const blogsAtEnd = await helper.blogsInDb();
-  assert.strict(!blogsAtEnd.includes(id));
-  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
-});
+      await api.post("/api/blogs").send(withoutUrl).expect(400);
+      await api.post("/api/blogs").send(withoutTitle).expect(400);
 
-test.only("a blog's likes can be updated", async () => {
-  const id = helper.initialBlogs[0]._id;
+      const blogsAtEnd = await helper.blogsInDb();
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+    });
+  });
 
-  const updatedNote = {
-    likes: 10,
-  };
+  describe("deleting blogs", () => {
+    test("a blog can be successfully deleted", async () => {
+      const blogsAtStart = await helper.blogsInDb();
+      const id = blogsAtStart[0].id;
 
-  await api.put(`/api/blogs/${id}`).send(updatedNote).expect(204);
+      await api.delete(`/api/blogs/${id}`).expect(204);
+
+      const blogsAtEnd = await helper.blogsInDb();
+      assert.strict(!blogsAtEnd.includes(id));
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+    });
+  });
+
+  describe("updating blogs", () => {
+    test("a blog's likes can be updated", async () => {
+      const blogsAtStart = await helper.blogsInDb();
+      const id = blogsAtStart[0].id;
+
+      const updatedNote = {
+        likes: 10,
+      };
+
+      await api.put(`/api/blogs/${id}`).send(updatedNote).expect(204);
+    });
+  });
 });
 
 after(async () => {
