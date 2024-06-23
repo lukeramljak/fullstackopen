@@ -28,6 +28,28 @@ test.only("a blog's unique identifier is named 'id'", async () => {
   assert(Object.keys(blog[0]).includes("id"));
 });
 
+test.only("a new blog can be created", async () => {
+  const newBlog = {
+    title: "Temporary blog",
+    author: "Not a real author",
+    url: "https://example.com",
+    likes: 0,
+  };
+
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const blogsAtEnd = await helper.blogsInDb();
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
+
+  const contents = blogsAtEnd.map((blog) => blog.title);
+  assert(contents.includes("Temporary blog"));
+});
+});
+
 after(async () => {
   mongoose.connection.close();
 });
