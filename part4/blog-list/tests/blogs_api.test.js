@@ -94,6 +94,16 @@ test.only("a blog can be successfully deleted", async () => {
   assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
 });
 
+test.only("a blog's likes can be updated", async () => {
+  const id = helper.initialBlogs[0]._id;
+
+  const updatedNote = {
+    likes: 10,
+  };
+
+  await api.put(`/api/blogs/${id}`).send(updatedNote).expect(204);
+});
+
 after(async () => {
   mongoose.connection.close();
 });
