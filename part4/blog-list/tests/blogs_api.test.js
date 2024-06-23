@@ -48,6 +48,22 @@ test.only("a new blog can be created", async () => {
   const contents = blogsAtEnd.map((blog) => blog.title);
   assert(contents.includes("Temporary blog"));
 });
+
+test.only("a blog missing 'likes' will default them to 0", async () => {
+  const blogWithoutLikes = {
+    title: "No one likes it",
+    author: "Nobody",
+    url: "https://example.com",
+  };
+
+  const response = await api
+    .post("/api/blogs")
+    .send(blogWithoutLikes)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const returnedBlog = response.body;
+  assert.strictEqual(returnedBlog.likes, 0);
 });
 
 after(async () => {
