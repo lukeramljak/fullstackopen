@@ -5,10 +5,12 @@ const initialNotes = [
   {
     content: "HTML is easy",
     important: false,
+    userId: "667aa7cc621c5664b90201f8",
   },
   {
     content: "Browser can execute only JavaScript",
     important: true,
+    userId: "667aa7cc621c5664b90201f8",
   },
 ];
 
