@@ -58,17 +58,20 @@ describe("when there is initially some notes saved", () => {
 
   describe("addition of a new note", () => {
     test("succeeds with valid data", async () => {
-      const users = await helper.usersInDb();
-      const id = users[0].id;
+      const response = await api
+        .post("/api/login")
+        .send({ username: "root", password: "sekret" });
+
+      const token = response.body.token;
 
       const newNote = {
-        userId: id,
         content: "async/await simplifies making async calls",
         important: true,
       };
 
       await api
         .post("/api/notes")
+        .set("Authorization", `Bearer ${token}`)
         .send(newNote)
         .expect(201)
         .expect("Content-Type", /application\/json/);
@@ -81,15 +84,21 @@ describe("when there is initially some notes saved", () => {
     });
 
     test("fails with status code 400 if data is invalid", async () => {
-      const users = await helper.usersInDb();
-      const id = users[0].id;
+      const response = await api
+        .post("/api/login")
+        .send({ username: "root", password: "sekret" });
+
+      const token = response.body.token;
 
       const newNote = {
-        userId: id,
         important: true,
       };
 
-      await api.post("/api/notes").send(newNote).expect(400);
+      await api
+        .post("/api/notes")
+        .send(newNote)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(400);
 
       const notesAtEnd = await helper.notesInDb();
       assert.strictEqual(notesAtEnd.length, helper.initialNotes.length);
