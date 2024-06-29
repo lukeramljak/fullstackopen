@@ -120,6 +120,52 @@ describe("when there is initially some notes saved", () => {
       assert(!contents.includes(noteToDelete.content));
     });
   });
+
+  describe("user authentication", () => {
+    test("user can login with correct credentials", async () => {
+      await api
+        .post("/api/login")
+        .send({ username: "root", password: "sekret" })
+        .expect(200)
+        .expect("Content-Type", /application\/json/);
+    });
+    test("succeeds with status code of 201 if bearer token is valid", async () => {
+      const response = await api
+        .post("/api/login")
+        .send({ username: "root", password: "sekret" });
+
+      const token = response.body.token;
+
+      const newNote = {
+        content: "this is a valid note",
+        important: true,
+      };
+
+      await api
+        .post("/api/notes")
+        .send(newNote)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(201);
+
+      const notesAtEnd = await helper.notesInDb();
+      assert.strictEqual(notesAtEnd.length, helper.initialNotes.length + 1);
+    });
+    test("fails with status code 401 if bearer token is missing", async () => {
+      const newNote = {
+        content: "this note should not be created",
+        important: true,
+      };
+
+      await api
+        .post("/api/notes")
+        .send(newNote)
+        .expect(401)
+        .expect("Content-Type", /application\/json/);
+
+      const notesAtEnd = await helper.notesInDb();
+      assert.strictEqual(notesAtEnd.length, helper.initialNotes.length);
+    });
+  });
 });
 
 after(async () => {
