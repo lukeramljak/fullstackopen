@@ -13,11 +13,6 @@ const User = require("../models/user");
 describe("when there is initially one user in the db", () => {
   beforeEach(async () => {
     await User.deleteMany({});
-
-    const passwordHash = await bcrypt.hash("secret", 10);
-    const user = new User({ username: "root", passwordHash });
-
-    await user.save();
   });
 
   test("creation succeeds with a fresh username", async () => {
