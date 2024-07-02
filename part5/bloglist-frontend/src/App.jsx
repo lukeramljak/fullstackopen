@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Blog from "./components/Blog";
 import BlogForm from "./components/BlogForm";
 import LoginForm from "./components/LoginForm";
+import Notification from "./components/Notification";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 
@@ -13,6 +14,7 @@ const App = () => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [url, setUrl] = useState("");
+  const [message, setMessage] = useState({ type: null, message: null });
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -27,6 +29,13 @@ const App = () => {
     }
   }, []);
 
+  const showMessage = (messageObject) => {
+    setMessage(messageObject);
+    setTimeout(() => {
+      setMessage({ content: null, type: null });
+    }, 5000);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -37,7 +46,7 @@ const App = () => {
       setUsername("");
       setPassword("");
     } catch (exception) {
-      console.error(exception);
+      showMessage({ type: "error", message: "wrong username or password" });
     }
   };
 
@@ -55,8 +64,15 @@ const App = () => {
         url,
       });
       setBlogs(blogs.concat(response));
+      showMessage({
+        type: "success",
+        message: `a new blog ${title} by ${author} added`,
+      });
     } catch (exception) {
-      console.error(exception);
+      showMessage({
+        type: "error",
+        message: exception.message,
+      });
     }
   };
 
@@ -64,6 +80,7 @@ const App = () => {
     return (
       <>
         <h1>log in to application</h1>
+        <Notification type={message.type} message={message.message} />
         <LoginForm
           handleLogin={handleLogin}
           username={username}
@@ -78,6 +95,8 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
+      <Notification type={message.type} message={message.message} />
+
       {user && (
         <>
           <div>
