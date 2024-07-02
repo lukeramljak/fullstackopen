@@ -9,6 +9,9 @@ const App = () => {
   const [newNote, setNewNote] = useState("a new note...");
   const [showAll, setShowAll] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     noteService.getAll().then((initialNotes) => {
@@ -57,6 +60,27 @@ const App = () => {
   };
 
   const notesToShow = showAll ? notes : notes.filter((note) => note.important);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const user = await loginService.login({
+        username,
+        password,
+      });
+
+      noteService.setToken(user.token);
+      setUser(user);
+      setUsername("");
+      setPassword("");
+    } catch (exception) {
+      setErrorMessage("Wrong credentials");
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+    }
+  };
 
   return (
     <div>
