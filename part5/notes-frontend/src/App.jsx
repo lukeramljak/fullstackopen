@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import Footer from "./components/Footer";
-import Note from "./components/Note";
+import LoginForm from "./components/LoginForm";
+import NoteForm from "./components/NoteForm";
+import NoteList from "./components/NoteList";
 import Notification from "./components/Notification";
+import loginService from "./services/login";
 import noteService from "./services/notes";
 
 const App = () => {
@@ -86,24 +89,32 @@ const App = () => {
     <div>
       <h1>Notes</h1>
       <Notification message={errorMessage} />
+
+      {user === null ? (
+        <LoginForm
+          handleLogin={handleLogin}
+          username={username}
+          password={password}
+          setUsername={setUsername}
+          setPassword={setPassword}
+        />
+      ) : (
+        <div>
+          <p>{user.name} logged-in</p>
+          <NoteForm
+            addNote={addNote}
+            newNote={newNote}
+            handleNoteChange={handleNoteChange}
+          />
+        </div>
+      )}
+
       <div>
         <button onClick={() => setShowAll(!showAll)}>
           show {showAll ? "important" : "all"}
         </button>
+        <NoteList notes={notesToShow} toggleImportanceOf={toggleImportanceOf} />
       </div>
-      <ul>
-        {notesToShow.map((note) => (
-          <Note
-            key={note.id}
-            note={note}
-            toggleImportance={() => toggleImportanceOf(note.id)}
-          />
-        ))}
-        <form onSubmit={addNote}>
-          <input value={newNote} onChange={handleNoteChange} />
-          <button type="submit">save</button>
-        </form>
-      </ul>
       <Footer />
     </div>
   );
